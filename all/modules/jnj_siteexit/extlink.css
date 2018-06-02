@@ -1,0 +1,30 @@
+a.ext {
+  /*background: url(extlink.png) right center no-repeat;*/
+  padding-right: 0px;
+}
+a.mailto {
+  /*background: url(mailto.png) right center no-repeat;*/
+  padding-right: 0px;
+}
+
+#popup_footer {
+  float: none;
+  clear: both;
+  text-align: center;
+  margin: 4em 0 -3em;
+  color: #898989;
+}
+
+img.img_buttons {
+  border: 0px;
+  /*width: 120px;*/
+}
+
+.extlink_content {
+  font-family: verdana;
+  font-size: 12px;
+  margin-left: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+
+}

@@ -1,0 +1,27 @@
+; $Id: zytiga.info,v 1.5 2007/07/01 23:27:32 goba Exp $
+name = Zytiga_uk
+description = custom theme.
+version = VERSION
+core = 7.x
+engine = phptemplate
+stylesheets[all][] = css/style.css
+scripts[] = scripts/uk_script.js
+scripts[] = scripts/swfobject.js
+scripts[] = scripts/jquery.cookie.js
+scripts[] = scripts/jquery.validate.min.js
+scripts[] = scripts/jquery.metadata.js
+
+regions[left] = Left sidebar
+regions[right] = Right sidebar
+regions[searchblock] = Search Block
+regions[content] = Content
+regions[header] = Header
+regions[header_bottom] = Header bottom
+regions[home_header_menu] = Home header menu
+regions[footer] = Footer
+regions[home_footer_block] = Home footer block
+regions[home_footer_menu] = Home footer menu
+regions[footer_menu1] = Footer Menu1
+regions[footer_menu2] = Footer Menu2
+regions[left_logo] = Left footer logo
+regions[right_logo] = Right footer logo

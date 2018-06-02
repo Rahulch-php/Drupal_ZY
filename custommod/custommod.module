@@ -1,0 +1,645 @@
+<?php
+
+/**
+ * A call back menu for the url website/emailformat
+ */
+function custommod_menu(){
+	$items['email'] = array(
+		'title' => 'Email',
+		'page callback' => 'emailformat',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['emailfemale'] = array(
+		'title' => 'Email',
+		'page callback' => 'emailformat_female',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['emailspanish'] = array(
+		'title' => 'Email',
+		'page callback' => 'emailformat_spanish',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['emailfemalespanish'] = array(
+		'title' => 'Email',
+		'page callback' => 'emailformat_female_spanish',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+		
+	return $items;
+}
+/**
+ * Function to format the content and to set the parameters and send email
+ */
+function emailformat(){
+global $_POST;
+	
+	
+	$to = $_POST["resp_emailadd"]; 
+	$from = "info@yourrequest.com"; 
+		
+	
+ 	drupal_mail("custommod","doctor","$to","en","$message","$from");
+ 	
+}
+/**
+ * Function to format the content and to set the parameters and send email
+ */
+function emailformat_spanish(){
+global $_POST;
+	
+	
+	$to = $_POST["resp_emailadd"]; 
+	$from = "dposimse@its.jnj.com"; 
+		
+ 	drupal_mail("custommod","doctorsp","$to","en","$message","$from");
+ 	
+}
+
+/**
+ * Function to format the content and to set the parameters and send email
+ */
+function emailformat_female_spanish(){
+global $_POST;
+	
+		if($_POST["part_emailadd"] == ""){
+			$to = $_POST["fem_resp_emailadd"]; 
+			$from = "info@yourrequest.com";
+			
+		}else{
+			$to = $_POST["part_emailadd"];	
+			$from = $_POST["fem_resp_emailadd"]; 
+			
+		}
+	
+		drupal_mail("custommod","femalesp","$to","en","$message","$from");
+ 		
+}
+/**
+ * Function to format the content and to set the parameters and send email
+ */
+function emailformat_female(){
+global $_POST;
+	
+		if($_POST["part_emailadd"] == ""){
+			$to = $_POST["fem_resp_emailadd"]; 
+			$from = "info@yourrequest.com";
+			
+		}else{
+			$to = $_POST["part_emailadd"];	
+			$from = $_POST["fem_resp_emailadd"]; 
+			
+		}
+	
+		drupal_mail("custommod","female","$to","en","$message","$from");
+ 		
+}
+
+/**
+ * Mail hook that is triggered by drupal_mail function for getting content
+ */
+function custommod_mail($key, &$message, $params){
+	global $base_url, $_POST;
+		
+		$content = "";
+		/*ini_set('SMTP','smtp-relay.fs.capgemini.com');
+		ini_set('smtp_port','25');*/
+		
+	/*	ini_set('SMTP','smtp.eu.jnj.com');
+		ini_set('smtp_port','25');
+		
+		*/
+		
+		switch($key){
+			case "doctor":
+				
+					/*foreach($_POST as $key=>$value){
+						$content .= "$key"."=="."$value"."<br>";
+					}*/
+					
+					$imgPath = $base_url."/".file_directory_path()."/";
+					//$_POST["detail_email"] = "true";
+					
+					if ($_POST["detail_email"] == "1"){
+						
+						if($_POST['prev_tried'] == "undefined"){
+							$prev_tried = "";
+						} else {
+							$prev_tried = $_POST['prev_tried'];
+						}
+						
+						if($_POST['further_info'] == "undefined"){
+							$further_info = "";
+						} else {
+							$further_info = $_POST['further_info'];
+						}
+					
+						$content .= 
+						"<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>Dear enquirer</p>
+						
+						<p>Thank you for completing the online interactive questionnaire.</p>
+						
+						<p>We have entered your answers into a guide you can read or give to your doctor. Just remember to take care 
+						when you print this out. Be discreet. Use your own printer, but if you have to use a public or work computer, 
+						test it out with a non-personal document to see if everything is working as you would expect. 
+						This will help avoid any embarrassing explanations.</p>
+						
+						<p>Now comes the important bit. You may like to read over this before your visit, or you may wish to simply give 
+						this to your doctor.</p>  
+								<table cellpadding='0' cellspacing='5' style='width:95%; font-family :Arial, Helvetica, sans-serif; font-size:11px; background-color:#d5d3e8;'>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											I am seriously worried that, due to premature ejaculation, ".strtolower($_POST['resp_motiv']).". 
+											Because of this,I would like some help to last longer in bed.
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											".ucfirst($_POST['rel_status'])." currently in a relationship. My current (or most recent) relationship 
+								lasted .".strtolower($_POST['rel_dura'])."
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											This been a worry with ".$_POST['prev_partner']." of my previous partners.
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											I would describe my relationships as ".strtolower($_POST['rel_stress'])." stressful
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td> 
+											Although I cannot be certain, I think I last " .$_POST['sex_dura']." and that’s usually " .
+								strtolower($_POST['sex_ends'])." penetration.
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											I have tried these before:
+								".$prev_tried."
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											I ".strtolower($_POST['ed_status'])." have trouble getting or maintaining an erection. 
+								[it is important your doctor is aware of this as, for some men, there are links to PE and treatments are 
+								available.]
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											I’d also like to give you the following information:".
+								$further_info."
+										</td></tr>
+								</table>
+									<p>So, now you are armed with everything you need to talk to your doctor about PE. But have you made your 
+									appointment? This may be a difficult thing to talk about, but remember you have important reasons for 
+									wanting to get help – and there are treatments that could help you get a healthier sex life.</p>
+						
+									<p>Good Luck!</p>
+								</td>
+								<td style='height: 22px; vertical-align:top;'>
+								<img src='".$imgPath."rightImage.jpg'></td>
+							</tr>
+						</table>";
+						
+					}else{
+						
+						$content .="<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>Dear enquirer</p>
+					
+							<p>Congratulations for taking steps to get your premature ejaculation sorted.</p>
+							
+							<p>There are certain topics of a personal nature your doctor is likely to ask you. It’s true some people will 
+							find these embarrassing to talk about, which is why a bit of preparation will help you plan what to say, 
+							how you want to say it and can help keep the conversation on track.</p> 
+							
+							<p>You can keep this guide and read over it before your visit. Just remember to take care if you print it out.</p>  
+							
+							<p>Be discreet. Use your own printer, but if you have to use a public or work computer, test it out with a 
+							non-personal document to see if everything is working as you would expect. This will help avoid any 
+							embarrassing explanations.</p>
+							
+							<p>Now comes the important bit.</p>
+							
+							<p>Your main motivation for going to the Doctor.</p>
+					
+							<table cellpadding='0' cellspacing='5' style='width:95%; font-family :Arial, Helvetica, sans-serif; font-size:11px; background-color:#d5d3e8;'>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Relationship status.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										General issues or stresses with your current or past partners.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										A few relevant details about your sex life.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Things you have tried, if any, to last longer.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Troubles getting an erection.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Anything else you feel your doctor should know.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										It’s highly unlikely, but your doctor may possibly ask to examine you. So, clean underwear’s essential!
+									</td></tr>
+							</table> 
+							<p>So, now you are better prepared to talk to your doctor. But have you made your appointment? 
+							This may be a difficult thing to talk about, but remember you have important reasons for wanting to get 
+							help – and there are treatments that could help you get a healthier sex life.</p>
+							
+							<p>Good Luck!</p>
+							</td>
+									<td style='height: 22px; vertical-align:top;'>
+									<img src='".$imgPath."rightImage.jpg'></td>
+								</tr>
+
+							</table>";
+					}
+					$headers = array(
+					                 'MIME-Version'              => '1.0',
+					                 'Content-Type'              => 'text/html; charset=UTF-8; format=flowed; delsp=yes',
+					                 'Content-Transfer-Encoding' => '8Bit',
+					                 'X-Mailer'                  => 'Drupal',
+					                 );
+					foreach ($headers as $key=>$value){
+						$message['headers'][$key] = $value;
+					}
+				 	$message['subject'] = "Taking action means taking control";
+				 	$message['body'] = "$content";
+				 	//echo $content;
+				 	break;
+				 	
+			case "doctorsp":
+					/*$content ="gopal";
+					foreach($_POST as $key=>$value){
+						$content .= "$key"."=="."$value"."<br>";
+					}*/
+					
+					$imgPath = $base_url."/".file_directory_path()."/";
+					//$_POST["detail_email"] = "true";
+					
+					if ($_POST["detail_email"] == "1"){
+						
+						if($_POST['prev_tried'] == "undefined"){
+							$prev_tried = "";
+						} else {
+							$prev_tried = $_POST['prev_tried'];
+						}
+						
+						if($_POST['further_info'] == "undefined"){
+							$further_info = "";
+						} else {
+							$further_info = $_POST['further_info'];
+						}
+					
+						$content .= 
+						"<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>Estimado solicitante</p>
+						
+						<p>Gracias por rellenar el cuestionario interactivo.</p>
+						
+						<p>Hemos introducido sus respuestas en una guía que puede leer o entregar a su médico. Recuerde 
+						imprimirla y llevarla el día de su consulta. Sea discreto. Es mejor utilizar su propia impresora, pero si debe utilizar 
+						un ordenador público o el del trabajo, realice una prueba con un documento no personal para observar si todo funciona 
+						como espera. Este proceso le ayudará a no tener que dar explicaciones embarazosas.</p>
+						
+						<p>Ahora viene lo importante. Tal vez desee leer este documento antes de su visita, o simplemente se lo entregue 
+						directamente a su médico.</p>  
+								<table cellpadding='0' cellspacing='5' style='width:95%; font-family :Arial, Helvetica, sans-serif; font-size:11px; background-color:#d5d3e8;'>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											Estoy muy preocupado, mi ".strtolower($_POST['resp_motiv']).". 
+											ha sufrido mucho a causa de la eyaculación precoz (EP), por lo que quiero aguantar más en la cama.
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											".ucfirst($_POST['rel_status'])." tengo una relación. Mi actual (o más reciente) relación duró."
+						.strtolower($_POST['rel_dura'])."
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											Esto ha preocupado a".$_POST['prev_partner']." de mis parejas anteriores.
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											".strtolower($_POST['rel_stress'])." describiría mis relaciones como estresantes. 
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td> 
+											A pesar de que no puedo estar seguro, creo que aguanto aproximadamente  " .$_POST['sex_dura']." , y normalmente eyaculo/termino " .
+								strtolower($_POST['sex_ends'])." de la penetración.
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											Ya he probado lo siguiente :
+								".$prev_tried."
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											".strtolower($_POST['ed_status'])." tengo problemas para alcanzar o mantener una erección. 
+											[Es importante que su médico conozca todos los datos ya que, para algunos hombres, existe una relación 
+											con la eyaculación precoz y tratamientos disponibles].
+										</td></tr>
+										<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+											También creo que :".
+								$further_info."
+										</td></tr>
+								</table>
+									<p>Ahora dispone de todos los recursos que necesita para hablar con su médico acerca de la EP. 
+									¿Ya tiene una cita? Puede que sea un tema difícil de tratar, pero recuerde que tiene motivos 
+									importantes para desear obtener ayuda, y existen tratamientos que pueden ayudarle a disfrutar de una 
+									vida sexual sana. </p>
+						
+									<p>¡Buena suerte!</p>
+								</td>
+								<td style='height: 22px; vertical-align:top;'>
+								<img src='".$imgPath."rightImage.jpg'></td>
+							</tr>
+						</table>";
+						
+					}else{
+						
+						$content .="<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>Estimado solicitante</p>
+					
+							<p>Enhorabuena por decidir actuar para acabar con su EP.</p>
+							
+							<p>Probablemente su médico desee realizarle algunas preguntas sobre información de tipo personal. Es cierto que 
+							algunas personas lo encontrarán embarazoso, por lo que un poco de preparación le ayudará a planificar lo que va 
+							a decir, cómo lo va a decir y que la conversación sea fluida. </p> 
+							
+							<p>Puede guardar esta guía y leerla antes de su consulta. Recuerde prestar atención si la imprime.</p>  
+							
+							<p>Sea discreto. Utilice su propia impresora, pero si debe utilizar un ordenador público o el del trabajo, 
+							realice una prueba con un documento no personal para observar si todo funciona como espera. 
+							Este proceso le ayudará a no tener que dar explicaciones embarazosas.</p>
+							
+							<p>Ahora viene el punto importante.</p>
+							
+							<p>Su motivación principal para ir al médico.</p>
+					
+							<table cellpadding='0' cellspacing='5' style='width:95%; font-family :Arial, Helvetica, sans-serif; font-size:11px; background-color:#d5d3e8;'>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Estado de la relación.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Problemas o inquietudes generales con sus ex-parejas o su pareja actual.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Algunos detalles relevantes acerca de su vida sexual.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Cosas que ha intentado, si ha intentado alguna, para aguantar más.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Problemas para obtener una erección.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Cualquier otra información que cree que su médico debería conocer.
+									</td></tr>
+									<tr><td valign='top'><img src='".$imgPath."bullet.gif'></td><td>
+										Es muy poco probable, pero tal vez su médico desee realizarle un reconocimiento. 
+										¡Por lo que la ropa interior limpia es fundamental!
+									</td></tr>
+							</table> 
+							<p>Ahora está mejor preparado para hablar con su médico. ¿Ya tiene una cita? Puede que sea un tema difícil de 
+							tratar, pero recuerde que tiene motivos importantes para desear obtener ayuda, y existen tratamientos que pueden 
+							ayudarle a disfrutar de una vida sexual sana.</p>
+							
+							<p>¡Buena suerte!</p>
+							</td>
+									<td style='height: 22px; vertical-align:top;'>
+									<img src='".$imgPath."rightImage.jpg'></td>
+								</tr>
+
+							</table>";
+					}
+					$headers = array(
+					                 'MIME-Version'              => '1.0',
+					                 'Content-Type'              => 'text/html; charset=UTF-8; format=flowed; delsp=yes',
+					                 'Content-Transfer-Encoding' => '8Bit',
+					                 'X-Mailer'                  => 'Drupal',
+					                 );
+					foreach ($headers as $key=>$value){
+						$message['headers'][$key] = $value;
+					}
+				 	$message['subject'] = "Actuar significa controlar";
+				 	$message['body'] = "$content";
+				 	//echo $content;
+				 	break;		
+				 
+			case "female":
+					
+					$content = "";
+					/*foreach($_POST as $key=>$value){
+						$content .= "$key"."=="."$value"."<br>";
+					}*/
+				
+					$imgPath = $base_url."/".file_directory_path()."/";
+					
+
+					if($_POST["part_emailadd"] == ""){
+						
+						/*There is string "secondone" prefixed to variable. so removing that string*/ 
+						$arrPartner = explode("secondOne,",$_POST["partner_feels"]);
+						if(count($arrPartner) > 1){
+							$partnerfeels = $arrPartner[1];
+						}else{
+							$partnerfeels = $_POST["partner_feels"];
+						}
+						$partnerfeels = str_replace(",",", ",$partnerfeels);
+						$partneris = str_replace(",",", ",$_POST["partner_is"]);
+					
+					$content = 
+						"<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>Dear enquirer</p>
+						
+						<p>Thank you for completing the online interactive questionnaire.</p>
+Well done for taking a bold first step towards a healthier relationship and sex life. As you are no doubt aware, this is a sensitive and potentially difficult topic for you and your partner to talk about. It can be very easy to get distracted into an argument about something else – especially if your partner is being defensive.</p>
+						<p>That’s why we have put together a check-list to help you plan what you are going to say. We hope it will help start you and your partner on a journey to a healthier love life.</p>
+						<p>And remember, you’re not alone, PE affects one in five men in the world.</p>
+						<p>Good luck!</p>
+						<p><b> Top tips for talking about PE</b></p>
+						<p align='justify'><i>Be sensitive to his feelings &#45;</i> it’s likely you’ll have had a difficult time living with PE yourself and probably have strong feelings on the matter. But understanding how your partner feels is crucial if you are to see eye-to-eye. You described your partner as feeling:".$partnerfeels."</p><p>
+						<i>Pick your moment carefully &#45;</i> plan when and where you’re going to have your conversation. Choose somewhere quiet and discreet, without distractions and when neither of you have other things on your minds – oh and definitely never after sex. Also remember to switch off your phones – most things can wait until later. You might want to think about walking in the park – a little exercise can help work off any tension build up.</p>
+						<p align='justify'><i>Find your way to his heart &#45;</i> it’s not uncommon for men to bury their heads in the sand believing nothing can be done about their PE. Deep down they often blame themselves and are probably unaware of any medical reason for it. It may help to tell him that treatment is possible – but, just as a spoonful of sugar helps the medicine go down, a healthy dose of love and affection when you tell him this can go a long, long way to keeping things calm. This is what you said your partner meant to you: ".$partneris."</p> 						
+						<p><i>Find out how he feels about his PE</i> &#45; but remember, talking about it will be difficult for him and this may bring up a lot of negative emotions. Try not to take these personally. You’ll be more prepared for this conversation than him, and a lot of these are likely to be defensive reactions. So don’t rush it. Take your time and, if necessary, space the conversation out over different days.</p>
+						<p align='justify'><i>Talk about things positively &#45;</i> the way you talk about things can have a big impact on what he hears. So don’t get too heavy, keep the tone upbeat and focused on the good things between you. </p> 					 										
+						<p align='justify'><i>Avoid talking about his emotions</i> &#45; this can feel patronising. Stick to talking about how you feel and what you would like. Therapists call this owning your emotions and it’s a handy way of communicating clearly and avoiding arguments. </p>
+						<p align='justify'>Finally, talk commitment &#45; to go to his doctor. He may welcome the support if you offer to go with him, but be prepared for him to say no. The most important thing is that he goes.</p></td>
+						<td style='height: 22px; vertical-align:top;'>
+								<img src='".$imgPath."rightImage.jpg'></td>
+						</tr></table>";
+						$message['subject'] = "Taking female means taking control";
+						
+					}else{
+						
+
+						switch($_POST["part_content"]){
+							case "Message 1": $part_content = "You know that thing we talked about. I found this film. I think it’s definitely worth watching. 
+							(It’s quite personal, so probably best if you watch it somewhere private.) Once you’ve watched it, would you like to sit down and talk about it again?";
+									break;
+							case "Message2" :  $part_content = "I know this is something that you’ve been thinking about. I have too. I watched this film and thought it might help.  (By the way, it’s quite personal, so probably best if you watch it somewhere private.) Once you’ve watched it, let me know what you think.";
+									break;
+							case "Message3" : $part_content = "It’s not easy to talk about something like this, but I think this film might help us both. (It’s quite personal, so probably best if you watch it somewhere private.) Then how about we sit down together and talk about it?";
+									break;
+
+							
+						}
+						$content = 
+						"<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>".$part_content."</p>".$base_url."
+</td><td style='height: 22px; vertical-align:top;'>
+								<img src='".$imgPath."rightImage.jpg'></td>
+						</tr></table>";
+						$message['subject'] = "I thought that this might help";
+					}
+
+
+
+						
+				 		$headers = array(
+					                 'MIME-Version'              => '1.0',
+					                 'Content-Type'              => 'text/html; charset=UTF-8; format=flowed; delsp=yes',
+					                 'Content-Transfer-Encoding' => '8Bit',
+					                 'X-Mailer'                  => 'Drupal',
+					                 );
+					foreach ($headers as $key=>$value){
+						$message['headers'][$key] = $value;
+					}
+				 	
+				 	
+					$message['body'] = $content;
+					break;
+
+				case "femalesp":
+					
+					$content = "";
+					/*foreach($_POST as $key=>$value){
+						$content .= "$key"."=="."$value"."<br>";
+					}*/
+				
+					$imgPath = $base_url."/".file_directory_path()."/";
+					
+
+					if($_POST["part_emailadd"] == ""){
+						
+						/*There is string "secondone" prefixed to variable. so removing that string*/ 
+						$arrPartner = explode("secondOne,",$_POST["partner_feels"]);
+						if(count($arrPartner) > 1){
+							$partnerfeels = $arrPartner[1];
+						}else{
+							$partnerfeels = $_POST["partner_feels"];
+						}
+						$partnerfeels = str_replace(",",", ",$partnerfeels);
+						$partneris = str_replace(",",", ",$_POST["partner_is"]);
+					
+					$content = 
+						"<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>Estimada Amiga</p>
+						
+						<p>Gracias por completar el cuestionario interactivo en línea.</p>
+Enhorabuena por haber decidido dar este importante primer paso hacia una relación de pareja y vida sexual más completa. Como seguramente ya sabes, este puede ser un tema complicado y delicado de tratar tanto para tu pareja como para ti. Es habitual que al intentar hablar de ello la conversación derive hacia otro tema y terminéis hablando de algo totalmente distinto, especialmente si tu pareja está a la defensiva.</p>
+						<p>Por ese motivo hemos creado una lista de puntos clave que te ayude a planificar y conducir esta conversación. Esperamos que esta lista os ayude a tu pareja y a ti a comenzar vuestro viaje hacia una relación de pareja plena.</p>
+						<p>Y recuerda, no estás sola, la Eyaculación Precoz afecta a uno de cada cinco hombres en el mundo.</p>
+						<p>¡Buena Suerte!</p>
+						<p><b> Puntos Clave a la hora de hablar sobre la Eyaculación Precoz:</b></p>
+						<p align='justify'><i>Se comprensiva &#45;</i> Seguramente vivir con la eyaculación precoz haya sido complicado para ti y probablemente estés especialmente sensibilizada con el tema. Pero comprender cómo se siente tu pareja es crucial para poder tratar este tema de tú a tú con él. Describirías los sentimientos de tu pareja como:".$partnerfeels."</p><p>
+						<i>Elige el momento cuidadosamente &#45;</i> Planea de antemano dónde y cuándo vais a tener vuestra conversación. Elige un lugar tranquilo y discreto sin distracciones y cuando ninguno de los dos tengáis otras cosas en la cabeza – Y por supuestos nunca después de haber mantenido relaciones sexuales. Recordad también apagar vuestros teléfonos – muchas cosas pueden esperar hasta más tarde. Quizás os apetezca dar un paseo por el parque – un poco de ejercicio os puede ayudar a liberar la tensión que pueda surgir.</p>
+						<p align='justify'><i>Busca como llegar a su corazón &#45;</i> Es frecuente que los hombres se empeñen en que su problema de eyaculación precoz no tiene solución. En el fondo se culpan a sí mismos de ello sin pensar, ni por un minuto, en las posibles causas médicas del problema. Hacerle saber que la eyaculación precoz se puede tratar le será de ayuda – pero igual que un poco de azúcar ayuda a un niño a tomarse las medicinas, una buena dosis de amor y afecto a la hora de decírselo será vital para hacerle sentir mejor y tranquilizarle. ¿Cómo describirías lo que tu pareja significa para ti?: ".$partneris."</p> 						
+						<p><i>Averigua como se siente con su problema de Eyaculación Precoz</i> &#45; pero no olvides que hablar de ello es algo muy difícil para él y que puede hacer sacar a la luz muchos sentimientos negativos. Intenta no tomártelo como algo personal. Tú vas a estar más preparada para esta conversación que él, y debes entender que todo lo que haga y diga no es algo personal sino su modo de ponerse a la defensiva ante un tema muy difícil de tratar para él. Por eso tómate tu tiempo, no le presiones, e incluso si fuese necesario divide la conversación en varios días para hacerlo todo más fácil.</p>
+						<p align='justify'><i>Sin lugar a dudas el modo en que le digas las cosas va a tener un gran impacto en cómo él las perciba. Así procura no estar demasiado seria, mantén un tono conciliador, haciendo especial hincapié en las cosas positivas. </p> 					 										
+						<p align='justify'><i>Evita hablar de sus emociones</i> &#45; Habla solo de lo que tú sientes y de lo que tú querrías. Los terapeutas denominan a esto “adueñarse de tus emociones”, te permitirá de forma sencilla comunicarte con claridad y evitar posibles discusiones.</p>
+						<p align='justify'>Finalmente, hablad de compromiso &#45; Compromiso de ir al médico. Es posible que agradezca tu apoyo si estás dispuesta a acompañarle, pero también debes asumir que es posible que se niegue a que le acompañes. En cualquier caso lo más importante es que finalmente acuda al médico.</p></td>
+						<td style='height: 22px; vertical-align:top;'>
+								<img src='".$imgPath."rightImage.jpg'></td>
+						</tr></table>";
+						$message['subject'] = "Teniendo femenina significa tomar el control";
+						
+					}else{
+						
+
+						switch($_POST["part_content"]){
+							case "Message 1": $part_content = "¿Recuerdas de lo que hablamos? He encontrado este vídeo y creo que realmente vale la pena que lo veas. (Es bastante personal así que mejor espera a verlo en un lugar privado). Una vez que lo hayas visto ¿te gustaría que nos sentásemos y hablásemos del tema de nuevo?";
+									break;
+							case "Message2" :  $part_content = "Sé que has estado dándole vueltas a esto. Quiero que sepas que yo también lo he hecho y al ver este vídeo he pensado que puede ayudarnos. (Es bastante personal así que mejor espera a verlo en un lugar privado). Ya me dirás que te parece cuando lo veas.";
+									break;
+							case "Message3" : $part_content = "No es fácil hablar de algo así pero al ver este vídeo he pensado que puede sernos de ayuda. (Es bastante personal así que mejor espera a verlo en un lugar privado) ¿Qué te parece si después nos sentamos y lo hablamos?";
+									break;
+
+							
+						}
+						$content = 
+						"<table style='' cellpadding='0' cellspacing='0'>
+							<tr>
+								<td colspan='2'>
+								<img alt=' ' height='77' src='".$imgPath."headerImage.JPG' width='611'></td>		
+							</tr>
+							<tr>
+								<td style='height: 22px; width:373px; font-family:Arial, Helvetica, sans-serif; font-size:11px; padding-right:20px;'> 
+								<br>
+								<p>".$part_content."</p>".$base_url."
+</td><td style='height: 22px; vertical-align:top;'>
+								<img src='".$imgPath."rightImage.jpg'></td>
+						</tr></table>";
+						$message['subject'] = "Pensé que esto podría ayudar";
+					}
+
+
+
+						
+				 		$headers = array(
+					                 'MIME-Version'              => '1.0',
+					                 'Content-Type'              => 'text/html; charset=UTF-8; format=flowed; delsp=yes',
+					                 'Content-Transfer-Encoding' => '8Bit',
+					                 'X-Mailer'                  => 'Drupal',
+					                 );
+					foreach ($headers as $key=>$value){
+						$message['headers'][$key] = $value;
+					}
+				 	
+				 	
+					$message['body'] = $content;
+					break;
+	
+				 	
+				}
+	 
+}

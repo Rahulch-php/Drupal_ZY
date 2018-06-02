@@ -1,0 +1,11 @@
+; $Id: zytiga_landing_page.info,v 1.2 2011/01/25 21:29:37 ronan Exp $
+name = Zytiga Landing Page
+description = "To get the landing page for Zytiga"
+core = 6.x
+
+; Information added by drupal.org packaging script on 2008-03-31
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "zytiga_landing_page"
+datestamp = "1206921661"
+

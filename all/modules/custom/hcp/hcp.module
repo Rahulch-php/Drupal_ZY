@@ -1,0 +1,48 @@
+<?php
+// $Id$
+/**
+ * @file
+ * Zytiga website specific customizations.
+ */
+
+
+/**
+ * Implementation of hook_init().
+ */
+function hcp_init() {	
+  //cookie validation
+  if (isset($_COOKIE['hcpprofession'])) {	 
+    $cookie_info = $_COOKIE['hcpprofession']; 
+  }
+  $path = drupal_get_path_alias($_GET['q']);
+  if($cookie_info != '') {
+    if($path == 'hcp')
+    	drupal_goto('home');
+  }
+  	
+  //global $language;
+  //if($language->language == 'en') {
+    if(is_valid_path($path)) {  //paths are not in drupal
+      $path_not_allowed = array('hcp', 'user', 'admin', 'privacy-policy', 'legal-notice', 'logout', 'extlink');
+      if($cookie_info == '' && !in_array($path, $path_not_allowed) && arg(0) != 'admin') {
+        drupal_goto('hcp');
+      }	
+    }
+  //}
+  
+}
+
+
+/**
+ * function to check the valid path before page preprocessing
+ * @param $path
+ * @return boolean
+ */
+function is_valid_path($path) {
+  $node_path = drupal_lookup_path('alias', $_GET['q']); //normal node paths aliases
+  $item_path_array = db_fetch_array(db_query("SELECT * FROM {menu_router} where path = '%s' ", $_GET['q'])); //menu linksexit;
+  if($node_path || is_array($item_path_array))  
+  	return 1;
+  else
+  	return 0;
+}

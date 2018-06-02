@@ -1,0 +1,52 @@
+; $Id   $
+name = ITS Admin
+description = Administration theme for ITS Drupal Framework. Based on RootCandy
+version = 1.0
+core = 6.x
+engine = phptemplate
+
+;  
+version = "1.0"
+core = "6.x"
+project = "itsadmin"
+datestamp = ""
+
+;php (minimum support)
+php = 4.2.1
+
+;Add Javascript
+
+; Add stylesheets.
+stylesheets[all][] = style.css
+
+;screenshot
+screenshot = screenshot.png
+
+;features
+features[] = logo
+features[] = name
+features[] = slogan
+features[] = search
+;features[] = favicon
+features[] = primary_links
+features[] = secondary_links
+
+
+; Define regions.
+regions[navigation_left] = Left navigation
+;regions[navigation_right] = Right navigation
+regions[sidebar_left] = Left sidebar
+;regions[sidebar_right] = Right sidebar
+regions[top] = Top
+regions[header] = Header
+regions[banner] = Banner
+regions[pre_content] = Before content
+regions[content] = Content
+regions[additional] = Additional
+regions[bottom] = Bottom
+
+
+
+
+
+

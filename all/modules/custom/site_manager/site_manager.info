@@ -1,0 +1,5 @@
+name = site_manager
+description = "site_manager form customization"
+package = custom
+core = 6.x
+version = 6.x

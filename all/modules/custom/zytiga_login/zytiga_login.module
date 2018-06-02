@@ -1,0 +1,181 @@
+<?php
+/* $Id: zytiga_login.module $ */
+
+include(drupal_get_path('module', 'user') .'/user.pages.inc');
+
+
+function zytiga_login_perm() {
+  return array('login zytiga_login','logout zytiga_login', 'video popup settings');
+}
+
+
+/**
+ * Menu Hooks
+ */
+function zytiga_login_menu() {
+  $items = array();
+  $items['login'] = array(
+    'title'            => 'Zytiga Login',
+    'page callback'    => 'zytiga_login_user_login',
+    'access arguments' => array('login zytiga_login'),
+    'type'             => MENU_CALLBACK
+  );
+  $items['user/userLogout'] = array(
+    'title' => 'Zytiga Log out',
+    'page callback' => 'zytiga_login_user_logout',
+    'access arguments' => array('logout zytiga_login'),
+    'type'          => MENU_CALLBACK
+  );
+  
+   $items['admin/settings/video_popup'] = array(
+    'title' => 'Video Popup settings',
+    'description' => 'Select the check box to show video popup in professional section',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('video_popup_admin_settings'),
+    'access arguments' => array('video popup settings'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  return $items;
+}
+
+
+/* The function to handle external login performed by the JC site*/
+function zytiga_login_user_login(){
+	global $base_root,$user;
+	
+	//This code will logout any user with nurse role and then attempt to login. (redirect to same url again)
+	if(in_array('Nurse',$user->roles)){
+		user_logout();	
+		header('Location: '.base_path().'?params='.$params);			
+	}
+	
+	$params = decipher($_GET["params"]);
+	
+	//The plaintext is separated by ':' in Java before encryption. The order of data is 
+	// firstName:lastName:userId:email
+	//$plain_params = explode(':',$params);
+	$plain_params = array('firstname','lastname','userid','email');
+	
+	setcookie('zytiga_login_userInfo', $plain_params[0].'_'.$plain_params[1].'_'.$plain_params[2].'_'.$plain_params[3], time() + 420000, '/');
+	setcookie('zytiga_login_securityToken', $_GET["securityToken"], time() + 1209600, '/');
+
+	//Use the existing dummy user to login into the system.
+	//The user logged in is tempuser but the system shows the plain_params[0] as the logged in user.
+	$params = array(
+      'name' => 'zytiga_login_auth_user',
+      'pass' => 'zytiga_login_auth_user',
+    );
+    // Authenticate user
+    $account = user_authenticate($params);
+  	
+	header('Location: '.base_path());
+}
+
+
+/**
+ * Access function
+ */
+function zytiga_login_access($node) {
+  return TRUE;
+}
+
+/* 
+	To customize logout function to delete the rows in database and also to clear the name cookie 
+	When the user logs out, the dummy entries that were inserted in users table has to be removed.
+	Also the cookie psychiatrytv_userInfo has to be removed. 
+	The entry in the sessions table will be handled by the Drupal user_logout method. (which will be called
+	after the removal logic is executed)
+*/
+
+function zytiga_login_user_logout(){
+	//First Check if the cookie psychiatrytv_userInfo exists (this is set in psychiatrytv_login method)
+	if(isset($_COOKIE['zytiga_login_userInfo'])){
+		clearUserCookies();
+	}
+	user_logout();
+}
+
+
+/**
+*	This function is used to decrypt the user information received from Java. This data is encrypted
+*	using AES/CBC in Java. AES = rijandael-128 in PHP. The secret key and the IV are also exactly same
+*	as the ones used in the encryption code.
+*
+*/
+function decipher($text){
+	$cipher     = "rijndael-128";
+	$mode       = "cbc";
+	$secret_key = "01234567890abcde";
+	$iv         = "fedcba9876543210";
+
+	$td = mcrypt_module_open($cipher, "", $mode, $iv);
+
+	mcrypt_generic_init($td, $secret_key, $iv);
+	$decrypted_text = mdecrypt_generic($td, hex2bin($text));
+	
+	mcrypt_generic_deinit($td);
+	mcrypt_module_close($td);
+	return trim($decrypted_text);
+}
+
+/**
+*	For converting the HEX value into a binary value. It is converted to HEX at the time of encryption.
+*/
+function hex2bin($hexdata) {
+  $bindata="";
+
+  for ($i=0;$i<strlen($hexdata);$i+=2) {
+   $bindata.=chr(hexdec(substr($hexdata,$i,2)));
+  }
+
+  return $bindata;
+}
+
+/**
+*	This method clears the user related cookies that are created at the time of user login in the 
+*	psychiatrytv_login method.
+*/
+function clearUserCookies(){
+	setcookie('zytiga_login_userInfo', '', time() - 1209600, '/');
+	setcookie('zytiga_login_securityToken', '', time() - 1209600, '/');
+}
+
+function zytiga_login_help($path=NULL, $arg=array()) {
+  switch ($path) {
+    case 'admin/help#search':
+      $output = '<p>'. t('The search module adds the ability to search for content by keywords. Search is often the only practical way to find content on a large site, and is useful for finding both users and posts.') .'</p>';
+      $output .= '<p>'. t('To provide keyword searching, the search engine maintains an index of words found in your site\'s content. To build and maintain this index, a correctly configured <a href="@cron">cron maintenance task</a> is required. Indexing behavior can be adjusted using the <a href="@searchsettings">search settings page</a>; for example, the <em>Number of items to index per cron run</em> sets the maximum number of items indexed in each pass of a <a href="@cron">cron maintenance task</a>. If necessary, reduce this number to prevent timeouts and memory errors when indexing.', array('@cron' => url('admin/reports/status'), '@searchsettings' => url('admin/settings/search'))) .'</p>';
+      $output .= '<p>'. t('For more information, see the online handbook entry for <a href="@search">Search module</a>.', array('@search' => 'http://drupal.org/handbook/modules/search/')) .'</p>';
+      return $output;
+    case 'admin/settings/search':
+      return '<p>'. t('The search engine maintains an index of words found in your site\'s content. To build and maintain this index, a correctly configured <a href="@cron">cron maintenance task</a> is required. Indexing behavior can be adjusted using the settings below.', array('@cron' => url('admin/reports/status'))) .'</p>';
+    case 'search#noresults':
+      return t('<ul>
+<li> if your spelling is correct.</li>
+<li>Remove quotes around phrases to match each word individually: <em>"blue smurf"</em> will match less than <em>blue smurf</em>.</li>
+<li>Consider loosening your query with <em>OR</em>: <em>blue smurf</em> will match less than <em>blue OR smurf</em>.</li>
+</ul>');
+  }
+}
+
+
+function video_popup_admin_settings() {
+	$form['video_popup_show'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Show Video popup on page load'),
+		'#default_value' => variable_get('video_popup_show', true),
+		);
+	$form['video_popup_button'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Show Video tutorial button'),
+		'#default_value' => variable_get('video_popup_button', true),
+		);
+	 $form['video_popup_filename'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Video tutorial file name'),
+		'#default_value' => variable_get('video_popup_filename', '/sites/all/themes/psychiatrytv/flv/24x7_clip_spanish_HD-1280x720.f4v'),
+		);
+
+  return system_settings_form($form);
+}

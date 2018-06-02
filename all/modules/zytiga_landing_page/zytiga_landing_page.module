@@ -1,0 +1,121 @@
+<?php
+// $Id: zytiga_landing_page.module,v 1.3.2.1 2011/01/25 22:52:31 ronan Exp $
+
+/**
+ * Implementation of hook_menu
+ */
+function zytiga_landing_page_menu() {
+	$items = array();
+	$items['admin/settings/zytiga'] = array(
+		'title' => t('Landing Page Configuration'),
+		'description' => t('Configuration for the landing page of zytiga'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('zytiga_landing_page_settings_form'),
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+		'file' => 'zytiga_landing_page.admin.inc',
+	);
+	$items['show_footer_info'] = array(
+		'title' => t('Footer block information'),
+		'description' => t('Footer block information'),
+		'page callback' => 'show_footer_link_info',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK
+	);
+	return $items;	
+}
+
+/**
+ * Implementation of hook_init
+ */
+function zytiga_landing_page_init() {
+	global $countries;
+	$countries = array(
+		'uk' => t('UK'),
+		'switzerland' => t('Switzerland'),
+		'belgium' => t('Belgium'),
+		'netherlands' => t('Netherlands'),
+		'france' => t('France'),
+		'germany' => t('Germany'),
+		'italy' => t('Italy'),
+		'sweden' => t('Sweden'),
+		'denmark' => t('Denmark'),
+		'norway' => t('Norway'),
+		'finland' => t('Finland'),
+		'greece' => t('Greece'),
+		'austria' => t('Austria'),
+		'turkey' => t('Turkey'),
+		'spain' => t('Spain'),
+		'portugal' => t('Portugal'),
+		'poland' => t('Poland'),
+		'bulgaria' => t('Bulgaria'),
+		'hungary' => t('Hungary'),
+		'crepublic' => t('Czech Republic'),
+		'slovakia' => t('Slovakia'),
+		'slovenia' => t('Slovenia'),
+		//'ireland' => t('Ireland'),
+	);
+	drupal_add_js(drupal_get_path('module', 'zytiga_landing_page').'/zytiga_landing_page.js');
+}
+
+/**
+ * Implementation of hook_theme.
+ */
+function zytiga_landing_page_theme() {
+	return array(
+		'zytiga_settings_form' => array(
+			'arguments' => array('form' => NULL),
+		),
+		'zytiga_countries_list' => array(),
+	);
+}
+
+function theme_zytiga_settings_form($form) {
+	$output = array();
+	foreach($form as $key => $element) {
+		if(substr($key, 0, 1) != '#') {
+			foreach($form[$key] as $ele_key => $ele) {
+				if(substr($ele_key, 0, 1) != '#')
+					$output[$key][$ele_key] = drupal_render($form[$key][$ele_key]);
+			}
+		}
+	}
+	return theme('table', array(t('Country'), array('data' => t('URL'), 'width' => '378px'), t('Will be Released')), $output);
+}
+
+function theme_zytiga_countries_list() {
+	global $countries;
+	$country_sites = variable_get('country_sites', '');
+	$country_sites = unserialize($country_sites);
+	$index = 0;
+	$output = '<ul>';
+	foreach($countries as $cid => $country) {
+		if($index % 6 == 0)
+			$output .= '<li><ul class="select_country">';
+		$index++;
+		
+		if($country_sites[$cid]['site'] == 0)
+			$output .= '<li class="'.$cid.'_disabled">'.$country."<br />&nbsp;".$country_sites[$cid]['released_by'];
+		else
+			$output .= '<li><a href="'.$country_sites[$cid]['url'].'" title="" class="'.$cid.'">'.$country.'</a>';
+		$output .= '</li>';
+		
+		if($index % 6 == 0) {
+			$output .= '</ul></li>';
+		}
+	}
+	if($index % 6 != 0) {
+		$output .= '</ul></li>';
+	}
+	$output .= '</ul>';
+	return $output;
+}
+
+/**
+ * implementation of footer block link information
+ */
+function show_footer_link_info() {
+	$node_footer_link_array = node_load(5);
+	print $node_footer_link_array->body;
+	exit;		
+}

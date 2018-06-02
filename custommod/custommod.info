@@ -1,0 +1,3 @@
+name = custommod
+description = "Custom module to send emails for doctor and female roles."
+core = 6.x

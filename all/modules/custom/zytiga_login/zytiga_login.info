@@ -1,0 +1,6 @@
+; $Id: zytiga_login.info,v 1.2 2007/07/24 16:20:44 seanr Exp $
+name = Zytiga login
+description = Common module to handle all custom code executions for the project.
+core = "6.x"
+package= Itrinno Framework
+

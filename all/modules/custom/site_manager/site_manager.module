@@ -1,0 +1,1043 @@
+<?php
+// $Id$
+/**
+ * @file
+ * Zytiga website specific customizations.
+ */
+
+/**
+ * function to return the access permissions for the sitemanager module tasks
+ * @return array
+ */
+function site_manager_perm() {
+	return array('access site-wide hcp form','access site-wide language form', 'access request a rep visit','access site-wide resources form','access custom_search');
+}
+
+/**
+ * Implementation of site_manager_init().
+ */
+function site_manager_init() {
+	drupal_add_js(drupal_get_path('theme', 'zytiga_uk') . '/scripts/jquery.validate.min.js');
+	drupal_add_js(drupal_get_path('module', 'site_manager') . '/site_manager.validate.js');
+	drupal_add_js(drupal_get_path('module', 'ThickBox') . '/thickbox.js');
+	drupal_add_js(drupal_get_path('theme', 'zytiga_uk') . '/js/jwplayer.js');
+}
+
+/**
+ * hook_theme()
+ * competition theme function*
+ * @return array  site-manager-resource-form.tpl.php
+ */
+function site_manager_theme() {
+	return array(
+    'site_manager_hcp_form' => array(
+    'arguments' => array('form' => NULL),
+    'template' => 'site-manager-hcp-form'
+    ),
+    'site_manager_language_form' => array(
+    'arguments' => array('form' => NULL),
+    'template' => 'site-manager-language-form'
+    ),
+    'site_manager_resources_form' => array(
+    'arguments' => array('form' => NULL),
+    'template' => 'site-manager-resource-form'
+    ),
+    'forward_form' => array(
+    'arguments' => array('form' => NULL),
+    'template' => 'site-manager-forward-form'
+    ),
+    'resourcesbox' => array(
+    'arguments' => array('title'=>NULL, 'link' => NULL, 'snippet'=>NULL, 'type' => NULL, 'date'=>NULL),
+    'template' => 'site-manager-resource-results'
+    ),
+    
+    'search-video-popup' => array(
+    'arguments' => array('video_url'=>NULL),
+    'template' => 'search-video-popup'
+    )    
+    );
+}
+/**
+ * Implementation of site_manager_menu().
+ */
+function site_manager_menu() {
+	$items['googlesearch_custom'] = array(
+    'title' => t('Resources'),
+    'page callback' => 'site_manager_custom_search',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access custom_search'),
+	);
+
+	$items['request-a-rep-visit'] = array(
+    'title' => t('Request a Rep visit'),
+    'description' => 'Request a Rep visit',
+	'page callback' => 'drupal_get_form',	
+    'page arguments' => array('request_getform'),
+    'access arguments' => array('access request a rep visit'),
+	'type' => MENU_CALLBACK,
+	);
+	$items['request-a-rep-visit/success'] = array(
+    'title'            => t('Request a Rep visit'),
+    'page callback'    => 'request_rep_success_page',
+    'access arguments' => array('access request a rep visit'),
+	'type' => MENU_CALLBACK,
+	);
+	$items['request-a-rep-visit/error'] = array(
+	'title' => t('Request a Rep visit'),
+	'access callback' => 'user_access',
+    'access arguments'=> array('access content'),
+	'page callback' => 'request_rep_error',
+	'type' => MENU_CALLBACK,
+	);
+	$items['forward/success/%'] = array(
+    'title'            => t('forward sucess'),
+    'page callback'    => 'get_forward_success_form',
+    'page arguments' => array(2),
+    'access arguments' => array('access forward'),
+	'type' => MENU_CALLBACK,
+	);
+	$items['display_video/%'] = array(
+	'title' => t('Display Video in Thickbox'),
+	'access callback' => 'user_access',
+    'access arguments'=> array('access content'),
+	'page callback' => 'display_video',
+	'type' => MENU_CALLBACK,
+	);	
+	
+	return $items;
+}
+
+function display_video() {
+	$video_url = arg(1);
+	print theme('search-video-popup', $video_url);
+}
+
+/**
+ * error page
+ * @return 
+ * @param
+*/
+function request_rep_error() { 
+  $output = t('Oops! An error has occured, please try again later!');
+  return $output;
+}
+/**
+ * Implementation of hook_block().
+ */
+function site_manager_block($op = 'list', $delta = 0) {
+  if ($op == 'list') {
+    $blocks[0]['info'] = t('Custom search');
+    // Not worth caching.
+    $blocks[0]['cache'] = BLOCK_NO_CACHE;
+    return $blocks;
+  }
+  else if ($op == 'view') {
+    $block['subject'] = t('Custom search');
+    $block['content'] = drupal_get_form('site_manager_resources_form', NULL);
+    return $block;
+  }
+}
+
+/**
+ * Implementation for the request a rep success page.
+ *
+ */
+function request_rep_success_page() {
+	$thank_u_msg =  t(variable_get('request_redirect_thankyou_message',t('Thank you for your message')));
+	return $thank_u_msg;
+}
+
+
+
+/**
+ * function to get the forword form using drupal_form
+ * @return formobject
+ */
+function get_forward_success_form($return_path) {
+	return drupal_get_form('forward_success_form');
+}
+
+/**
+ * Implementation for the forword success page.
+ *
+ */
+function forward_success_form() { 
+ $urlpart1= arg(2);
+ $urlpart2= arg(3);
+    $urlreditrct= ($urlpart2 != '') ? $urlpart1.'/'.$urlpart2 :$urlpart1;
+	$form = array();
+    $form = array(
+    '#action' => url(null, array('query' => 'q='.$urlreditrct))
+	);
+	$form['#attributes']['name'] = 'forward-success-form';
+	$form['submit'] = array (
+	'#type' => 'image_button',
+	'#src' => path_to_theme().'/images/btn_ok.gif',
+	);
+    return $form;
+}
+
+/**
+ * function to get the request a representative form elements
+ * @return form
+ */
+function request_getform() {
+	$form_objects = contactus_get_new_form('30');
+	global $user;
+	//Identifiying the web user and email
+	foreach ($form_objects as $keys => $values ) {
+		if($keys == 'name' || $keys == 'Name') {
+			foreach ($values as $key => $value) {
+				if($key == '#default_value') {
+					$form_objects[$keys][$key] = $user->name;
+				}
+			}
+		}
+		else if($keys == 'email' || $keys == 'Email' || $keys == 'email address' || $keys == 'Email Address') {
+			foreach ($values as $key => $value) {
+				if($key == '#default_value') {
+					$form_objects[$keys][$key] = $user->mail;
+				}
+			}
+		}else{
+			if(is_array($values))
+			foreach($values as $key => $value){
+				if($key == '#validations'){//echo $value.'<br />';
+					if($value){
+						$form_objects[$keys]['#element_validate'] = array('field_validations');
+					}
+					//$form_objects[$keys][$key] = $user->mail;
+				}
+			}
+		}
+	}
+
+	$form['#attributes'] = array('enctype' => "multipart/form-data");
+	$form['#submit'] = array('request_getform_submit');
+	$form['startdiv'] = array(
+		'#value' => '<h1>Request a Rep visit </h1><hr />',
+		'#type' => 'item',
+		'#weight' => -11,
+	);
+	$form['mandatory'] = array(
+		'#value' => '<div class="form"><div class="form_elements"><p>Fields marked <span>*</span> are mandatory.</p></div></div>',
+		'#type' => 'item',
+		'#weight' => -10,
+	);
+	$form['startinnerdiv'] = array(
+		'#value' => '<div id="id_width_change">',
+		'#type' => 'markup',
+		'#weight' => -9,
+	);
+	$form['subject'] = array(
+	  '#title' => t(''),
+	  '#type' => 'hidden',
+	  '#description' => t(''),
+	  '#weight' => -8,
+	  '#default_value' => $entity
+	);
+	$form['enddiv'] = array(
+		'#value' => '<div class="form"><p>By submitting your information, you agree that it will be governed by our <a title="Privacy policy" href="/privacy-policy">Privacy Policy</a>. </p></div>',
+		'#type' => 'item',
+		'#weight' => 8,
+	);
+	$form['req_contact_ok'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'),
+		'#weight' => 9,
+	);
+	$form['endinnerdiv'] = array(
+		'#value' => '</div>',
+		'#type' => 'markup',
+		'#weight' => -9,
+	);
+	$form = array_merge($form, $form_objects);
+	return $form;
+}
+/**
+ * Funtion to Request rep Form submits.
+ */
+function request_getform_submit($form_id, &$form_state) { 
+    global $itrinno_site_id;
+   // $itrinno_site_id= variable_get('framework_1_5_siteid','');
+	$subject = ($form_state['values']['subject'] && $form_state['values']['subject'] != -1) ? $form_state['values']['subject'] : 'no_subject';
+	
+	$data_array = array();
+	
+	$i = 0;
+	
+$default_keys = array('op', 'contact_ok', 'form_build_id', 'form_token', 'form_id', 'captcha_response', 'captcha_solution', 'captcha_token', 'captcha_info','message','email');
+	
+	foreach ($form_state['values'] as $key => $value) {
+		
+		$get_enc_data = $form_id[$key]['#encryption'];
+		
+		if(!in_array($key, $default_keys) && $value !='' && $value !=null && $form_id[$key]['#type'] != 'submit') {
+			switch(strtolower($form_id[$key]['#type'])){
+				case 'radios':
+					$value = $form_id[$key]['#options'][$value];
+				break;
+				
+				case 'checkbox':
+					$value = $value == 0?$value.'('.t('Unchecked').')':$value.'('.t('Checked').')';
+				break;
+			}
+			if ($get_enc_data == 1) {
+                
+				$params->ContactUs->ContactInfo[$i]->FieldName = $key;
+                $params->ContactUs->ContactInfo[$i]->FieldValue = $value;
+                $params->ContactUs->ContactInfo[$i]->IsEncrypted = 'true';
+                $params->ContactUs->ContactInfo[$i]->EncryptedValue = $value;
+				
+            } else {       
+				
+				$params->ContactUs->ContactInfo[$i]->FieldName = $key;
+				if($value!='no_subject'){
+                $params->ContactUs->ContactInfo[$i]->FieldValue = $value;
+				}else{
+				  $params->ContactUs->ContactInfo[$i]->FieldValue ='';
+				}
+                $params->ContactUs->ContactInfo[$i]->IsEncrypted = 'false';
+                $params->ContactUs->ContactInfo[$i]->EncryptedValue = '';
+            }
+			
+			$i++;
+		}
+	}
+	
+	
+	/*
+	* For file upload, if the form contains file field 
+	*/
+	variable_set('contactus_upload_extensions', 'jpg jpeg gif png txt doc xls pdf ppt mp3');
+	variable_set('contactus_upload_uploadsize', 2);
+	
+	 $file_destination = file_create_path(file_directory_path() .'/contactusuploads');
+	 $file_uploadsize = variable_get('contactus_upload_uploadsize','1');
+	 $file_limit = $file_uploadsize;
+	 $file_size = ($file_uploadsize * 1024 * 1024);
+	 $file_limit = ($file_limit && $file_size) ? max($file_limit, $file_size) : 0;
+	
+	 $limits['extensions'] = variable_get('contactus_upload_extensions','jpg jpeg');
+	 $limits['file_size'] = $file_limit;
+	
+	$k=0;
+	if($_FILES['files']['name']) {
+	
+	  foreach($_FILES['files']['name'] as $key => $values) {
+		if($values != '') { 
+			$validators = array( 
+						'file_validate_extensions' => array($limits['extensions']),
+						'file_validate_size' => array($limits['file_size']),
+					);
+				
+				if (!$uploaded_file = file_save_upload($key, $validators, $file_destination)) {
+					return;
+				} else {
+					 $params->ContactUs->ContactInfo[$i]->FieldName = $uploaded_file->source;
+					 $params->ContactUs->ContactInfo[$i]->FieldValue = curPageURL().base_path().$uploaded_file->filepath;
+					 $params->ContactUs->ContactInfo[$i]->IsEncrypted = 'false';
+					 $params->ContactUs->ContactInfo[$i]->EncryptedValue = '';
+				}
+				$i++;
+		 }
+	  }//for each
+	}//if
+	// File Upload End
+	
+	
+	if(strcmp($subject, 'no_subject') <> 0)
+	$params->ContactUs->Subject_id = $subject;
+	else 
+	$params->ContactUs->Subject_id = 0;
+	
+	$params->ContactUs->from = $form_state['values']['email'];
+	if($form_state['values']['Comments'] != null || trim($form_state['values']['Comments']) != "") {
+            $params->ContactUs->message = $form_state['values']['Comments'];
+        } else {
+            $params->ContactUs->message = "";
+        }
+	    //    $params->ContactUs->message = 'Thank you For Contacting us.';
+	
+	
+	$objContactusDat = new ContactusData();
+	$objContactusDat->SetServiceName('contactus');
+	$objContactusDat->SetServiceIdentity('create');
+	$objContactusDat->SetSiteId($itrinno_site_id);
+	$objContactusDat->SetMethod('post');
+	
+	$params->ContactUs->Site_id = $itrinno_site_id;
+	$params->ContactUs->StatusCode = 'New';
+	
+	
+	$objContactusDat->SetPostedData($objContactusDat->DataEncode($params)); 
+	$objContactus = new ContactusService(); 
+	//print_r($objContactusDat);exit;
+
+	$processedData = $objContactus->CreateContactUs($objContactusDat);
+	
+	$obj_response = $objContactusDat->DataDecode($processedData); 
+
+	if($obj_response->Message == 'Success') {
+		$InquiryID = $obj_response->contactusId;
+		$_SESSION['InquiryID'] = $InquiryID;
+		setcookie("InquiryID", $InquiryID);
+	
+		drupal_goto('request-a-rep-visit/success');
+	
+	} 
+	else {
+	
+		drupal_goto('request-a-rep-visit/error');
+	}
+	
+}
+
+/**
+ * function to get the hcp form
+ * @return form
+ */
+function site_manager_hcp_form(&$form_state)
+{
+	$form = array();
+	$form['terms'] = array(
+		'#type' => 'radios',
+    	'#options' => array('Yes' => "Yes",
+							'No' => "No"
+							),
+							);
+							$form['profession'] = array(
+		'#type' => 'select',
+		'#options' => array('' => 'Select your profession', 'Oncologist' => 'Oncologist', 'Urologist' => 'Urologist', 'Nurse' => 'Nurse', 'Pharmacist' => 'Pharmacist'),
+							);
+							$form['submit'] = array (
+		'#type' => 'image_button',
+	    '#src' => path_to_theme().'/images/btn_submit.gif',
+							);
+							$form['#validate'][] = 'site_manager_hcp_form_validate';
+							return $form;
+}
+
+/**
+ * Validateing competition form with zero values.
+ * @return array
+ */
+function site_manager_hcp_form_validate($form, &$form_state) {
+	if($form_state['values']['terms']==''){
+		form_set_error('terms', t("Please a terms"));
+	}
+	if(($form_state['values']['terms']=='Yes') && ($form_state['values']['profession']=='')){
+		form_set_error('profession', t("Please select profession"));
+	}
+
+}
+/**
+ * On submit send the destination path in hcp form
+ * @return $form_state['redirect']
+ */
+function site_manager_hcp_form_submit($form, &$form_state){
+	$values = $form_state['values'];
+	if($values['terms']=='Yes'){		
+		setcookie("hcpprofession", "profession");
+		$form_state['redirect'] = 'home';
+	}
+	else{
+		$form_state['redirect'] = 'hcp';
+	}
+}
+/**
+ * implementation of resources form
+ * @return form
+ */
+
+function site_manager_resources_form(&$form_state){
+	global $count_chk;
+	$stype_array = array();
+	
+	if(isset($_GET['stype'])) {
+	$check_array = explode("|", $_GET['stype']);
+	  foreach($check_array as $value) {
+		$stype_array[$value] = $value; 
+	  }
+	}
+	else {
+		$stype_array = 	$_GET['type'];
+	}
+	
+	$form = array();
+
+	$form = array(
+             '#action' => 'googlesearch_custom'
+	);
+	
+	$form['#attributes']['name'] = 'site-manager-resources-form';
+
+	$form['type'] = array(
+		'#type' => 'checkboxes',
+		'#options' => array("Video" => "Video", "Interactive" => "Interactive", "Documents" => "Documents"),
+	    '#default_value' => $stype_array
+	
+	);
+	$form['search_term'] = array(
+		'#type' => 'textfield',
+		'#size' => 25,
+	    '#default_value' => $_GET['search_term']
+	);
+	$form['submit'] = array (
+		'#type' => 'button',
+	    '#src' => path_to_theme().'/images/btn_search.gif',
+	    '#module' => t('site_manager')
+	);
+	$form['#validate'][]= 'site_manager_resources_form_validate';
+	return $form;
+}
+
+/**
+ * Validateing competition form with zero values.
+ * @return array
+ */
+function site_manager_resources_form_validate($form, &$form_state) {
+	if($form_state['values']['search_term']==''){
+		form_set_error('search_term', t("Please a enter keyword"));
+	}
+}
+
+/**
+ * implementation of forward form
+ * @return form
+ */
+function site_manager_form_alter(&$form, $form_state, $form_id){
+	if ($form_id == 'menu_edit_item' || strpos($form_id, '_node_form') > 0) {
+		$item = $form['menu']['#item'];
+		$form['menu']['html'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow html'),
+      '#default_value' => isset($item['options']['html']) ? $item['options']['html'] : 0,
+      '#description' => t('If you want to add html tags to the title of a menu, enable this. This should only be accessible to trusted users.'),
+		);
+	}
+	//forword to colleague
+	if ($form_id == 'forward_form') {
+		unset($form['message']['name']['#title']);
+		unset($form['message']['recipients']);
+		unset($form['message']['message']);
+		unset($form['message']['submit']);
+		unset($form['message']['email']['#title']);
+		$form['message']['email']['#size']= 32;
+		$form['message']['name']['#size']= 32;
+		$form['lastname'] = array(
+		'#type' => 'textfield',
+		'#size' => 32,
+		);
+		$form['femailone'] = array(
+		'#type' => 'textfield',
+		'#size' => 32,
+		);
+		$form['femailtwo'] = array(
+		'#type' => 'textfield',
+		'#size' => 32,
+		);
+		$form['femailthree'] = array(
+		'#type' => 'textfield',
+		'#size' => 32,
+		);
+		$form['femailfour'] = array(
+		'#type' => 'textfield',
+		'#size' => 32,
+		);
+		$form['femailfive'] = array(
+		'#type' => 'textfield',
+		'#size' => 32,
+		);
+		$form['submit'] = array(
+      '#type' => 'image_button',
+      '#src' => path_to_theme().'/images/btn_send.gif',
+		);
+		$form['#validate'][0]= 'send_colleague_form_validate';
+		$form['#submit'][0] = 'send_colleague_form_submit';
+	}
+	//Itrinno contact us form
+	if($form_id == 'contactus_list') {
+		//echo "<pre>"; print_r($form);exit;
+		$form["subject"] = array(
+      "#type" => "value",
+      "#value" => "29",
+		);
+		$form['innerdiv'] = array(
+		'#value' => '<div id="width_change">',
+		'#type' => 'markup',
+		'#weight' => -9,
+		);
+		$form['innerdivend'] = array(
+		'#value' => '</div>',
+		'#type' => 'markup',
+		'#weight' => 26,
+		);
+		$form['#attributes']['class'] = 'form';
+		$form['mandatory']['#value'] = "";
+		$form['contact_ok']['#weight'] = 25;
+		$form['contact_ok']['#value'] = "";
+	}
+	//itrinno contact us form for request a rep form
+	if($form_id == 'request_getform') {
+		//echo "<pre>"; print_r($form);exit;
+		$form["subject"] = array(
+      "#type" => "value",
+      "#value" => "30",
+		);
+		$form['req_contact_ok']['#weight'] = 25;
+		$form['req_contact_ok']['#value'] = "";
+	}
+}
+
+/**
+ * implementation of forward form validations
+ * @return array
+ */
+function send_colleague_form_validate($form, &$form_state) {
+	global $base_url, $user;
+	if($form_state['values']['name']==''){ form_set_error('name', t("Please  enter your firstname."));}
+	if($form_state['values']['lastname']==''){ form_set_error('lastname', t("Please  enter your lastname."));}
+	if($form_state['values']['femailone']==''){ form_set_error('femailone', t("Please  enter your friend emailaddress."));}
+
+}
+
+/**
+ * Implementation of hook_menu_link_alter
+ *
+ */
+function site_manager_menu_link_alter(&$item, $menu) {
+	if (isset($item['html']) && $item['html']) {
+		$item['options']['html'] = $item['html'];
+	}
+}
+
+/**
+ * implementation of forward form submit functionality
+ * @return array
+ */
+function send_colleague_form_submit($form, &$form_state) {
+	global $base_url, $user;
+	$dynamic_content = "";
+	// Compose the body:
+	// Note how the form values are accessed the same way they were accessed in the validate function
+
+	//If selected assemble dynamic footer block.
+	switch (variable_get('forward_dynamic_block', '')) {
+		case 'node':
+			$dynamic_content = '<h3>'. t('Recent blog posts') .'</h3>';
+			$query = "SELECT n.nid, n.title FROM {node} n WHERE n.type = 'blog' AND n.status = 1 ORDER BY n.created DESC";
+			$dynamic_content .= forward_top5_list($query, $base_url, 'blog');
+			break;
+		case 'user':
+			$dynamic_content = '<h3>'. t("Who's new") .'</h3>';
+			$query = 'SELECT u.uid, u.name FROM {users} u WHERE status <> 0 ORDER BY uid DESC';
+			$dynamic_content .= forward_top5_list($query, $base_url, 'user');
+			break;
+		case 'comment':
+			$dynamic_content = '<h3>'. t('Recent comments') .'</h3>';
+			$query = 'SELECT c.nid, c.cid, c.subject FROM {comments} c WHERE c.status = 0 ORDER BY c.timestamp DESC';
+			$dynamic_content .= forward_top5_list($query, $base_url, 'comment');
+			break;
+		case 'popular':
+			$dynamic_content = '<h3>'. t('Most Popular Content') .'</h3>';
+			$query = "SELECT n.nid, n.title FROM {node_counter} s INNER JOIN {node} n ON s.nid = n.nid WHERE s.timestamp <> '0' AND n.status = 1 ORDER BY s.timestamp DESC";
+			$dynamic_content .= forward_top5_list($query, $base_url, 'blog');
+			break;
+	}
+
+	if ((!$form_state['values']['path']) || ($form_state['values']['path'] == 'epostcard')) {
+		$emailtype = 'epostcard';
+		$content = '';
+		$returnurl = '';
+	}
+	else {
+		$emailtype = 'page';
+		$returnurl = $form_state['values']['path'];
+		$path_array = explode('/', $form_state['values']['path']);
+		if (($path_array[0] == 'node') && (!empty($path_array[1])) && (is_numeric($path_array[1]))) {
+			$nid = $path_array[1];
+			// we have a node
+			$content = node_load($nid);
+			if (!node_access('view', $content)) {
+				// Access is denied
+				return drupal_access_denied();
+			}
+			$content->teaser = check_markup((variable_get('forward_full_body', FALSE)) ? $content->body : $content->teaser, $content->format, FALSE);
+		}
+		else {
+			$_GET['q'] = $form_state['values']['path'];
+			//_menu_append_contextual_items();
+
+			menu_set_active_item($form_state['values']['path']);
+
+			// Adapted from index.php.
+			$content = new stdClass();
+			$content->body = menu_execute_active_handler();
+			$content->title = menu_get_active_title();
+
+			// It may happen that a drupal_not_found is called in the above call
+			if (preg_match('/404 Not Found/', drupal_get_headers()) == 1) {
+				return;
+			}
+
+			switch ($content->body) {
+				case MENU_NOT_FOUND:
+					return drupal_not_found();
+					break;
+				case MENU_ACCESS_DENIED:
+					return drupal_access_denied();
+					break;
+			}
+			$content->teaser = '';
+			$content->body = '';
+		}
+	}
+
+	if (variable_get('forward_allow_message', TRUE)) {
+		$message = variable_get('forward_filter_html', FALSE) ? nl2br(filter_xss($form_state['values']['message'], explode(',', variable_get('forward_filter_tags', 'p,br,em,strong,cite,code,ul,ol,li,dl,dt,dd')))) : nl2br(check_plain($form_state['values']['message']));
+	}
+	else {
+		$message = FALSE;
+	}
+
+	global $theme_key;
+	$theme_key = variable_get('theme_default', '');
+	$logo = (variable_get('forward_header_image', '') == '') ? theme_get_setting('logo') : variable_get('forward_header_image', '');
+
+	$vars = array(
+    'type' => $emailtype,
+    'site_name' => check_plain(variable_get('site_name', 'Drupal')),
+    'name' => check_plain($form_state['values']['name']),
+    'email' => check_plain($form_state['values']['email']),
+    'forward_message' => t(variable_get('forward_'. $emailtype .'_message', '!name thought you would like to see the !site web site.'), array('!name' => l($form_state['values']['name'], 'mailto:'. $form_state['values']['email'], array('absolute' => TRUE)), '!site' => variable_get('site_name', 'drupal'))),
+    'message' => $message,
+    'base_url' => $base_url,
+    'content' => $content,
+    'path' => $returnurl . $form_state['values']['path_cid'],
+    'dynamic_content' => $dynamic_content,
+    'forward_ad_footer' => variable_get('forward_ad_footer', ''),
+    'forward_footer' => variable_get('forward_footer', ''),
+
+	// New values for forward.tpl.php
+    'site_url' => url('forward/emailref', array('absolute' => TRUE, 'query' => 'path='. $returnurl . $form_state['values']['path_cid'])),
+    'width' => variable_get('forward_width', 400),
+    'logo' => (!empty($logo)) ? '<img src="'. url($logo, array('absolute' => TRUE)). '" alt="" />' : '',
+    'title' => ($emailtype == 'page') ? l($content->title, 'forward/emailref', array('absolute' => TRUE, 'query' => 'path='. $returnurl)) : FALSE,
+    'submitted' => (theme_get_setting('toggle_node_info_'. $content->type)) ? t('by %author', array('%author' => $content->name)) : FALSE,
+    'node' => ($emailtype == 'page') ? $content->teaser : FALSE,
+    'link' => ($emailtype == 'page') ? l(t('Click here to read more on our site'), 'forward/emailref', array('absolute' => TRUE, 'query' => 'path='. $returnurl . $form_state['values']['path_cid'])) : FALSE,
+	);
+
+	if (variable_get('forward_theme_template', 0)) {
+		// New forward.tpl.php
+		$params['body'] = theme('forward', $vars);
+	}
+	else {
+		// Old forward_*_theme functions
+		$params['body'] = theme('forward_'. $emailtype, $vars);
+	}
+
+	$params['subject'] = t(variable_get('forward_'. $emailtype .'_subject', '!name has sent you a message from !site'), array('!name' => $form_state['values']['name'], '!site' => variable_get('site_name', 'drupal')));
+
+	$from = variable_get('forward_sender_address', '');
+	if (empty($from)) {
+		$from = variable_get('site_mail', '');
+	}
+
+	$params['from'] = trim($form_state['values']['name'] .' <'. $from .'>');
+	$params['headers']['Reply-To'] = trim($form_state['values']['name'] .' <'. $form_state['values']['emailaddress'] .'>');
+
+	if($form_state['values']['femailone']!='') {
+		$to=$form_state['values']['femailone'];
+		drupal_mail('forward', 'forward_page', trim($to), language_default(), $params, $params['from']);
+		// Ensure that we register a flood event for each e-mail.
+		flood_register_event('forward');
+	}
+	if($form_state['values']['femailtwo']!='') {
+		$to=$form_state['values']['femailtwo'];
+		drupal_mail('forward', 'forward_page', trim($to), language_default(), $params, $params['from']);
+		// Ensure that we register a flood event for each e-mail.
+		flood_register_event('forward');
+	}
+	if($form_state['values']['femailthree']!='') {
+		$to=$form_state['values']['femailthree'];
+		drupal_mail('forward', 'forward_page', trim($to), language_default(), $params, $params['from']);
+		// Ensure that we register a flood event for each e-mail.
+		flood_register_event('forward');
+	}
+	if($form_state['values']['femailfour']!='') {
+		$to=$form_state['values']['femailfour'];
+		drupal_mail('forward', 'forward_page', trim($to), language_default(), $params, $params['from']);
+		// Ensure that we register a flood event for each e-mail.
+		flood_register_event('forward');
+	}
+	if($form_state['values']['femailfive']!='') {
+		$to=$form_state['values']['femailfive'];
+		drupal_mail('forward', 'forward_page', trim($to), language_default(), $params, $params['from']);
+		// Ensure that we register a flood event for each e-mail.
+		flood_register_event('forward');
+	}
+
+
+	// insert record into db to record nid, type and timestamp of send
+	db_query("INSERT INTO {forward_log} (path, type, timestamp, uid, hostname) VALUES ('%s', '%s', %d, %d, '%s')", $form_state['values']['path'], 'SENT', time(), $user->uid, ip_address());
+	// update node forward statistics
+	if (!empty($nid)) {
+		db_query("UPDATE {forward_statistics} SET forward_count = forward_count+1, last_forward_timestamp = %d WHERE nid = %d", time(), $nid);
+	}
+
+	variable_set('forward_total', variable_get('forward_total', 0) +1);
+	variable_set('forward_recipients', variable_get('forward_recipients', 0) + count($recipients));
+
+	drupal_set_message(t(variable_get('forward_thankyou', 'Thank you for your help in spreading the word about !site. We appreciate your help.'), array('!site' => variable_get('site_name', 'drupal'))), 'status');
+   //$form_state['redirect'] = ($returnurl != '') ? $returnurl : variable_get('forward_epostcard_return', '');
+	//$form_state['forward/success']; $returnurl 
+	drupal_goto('forward/success/'.$returnurl);
+	// CRMAPI hook - saves data to default enabled CRM
+	if (module_exists('crmapi')) {
+		if (!empty($user->crmapi_contact) && is_numeric($user->crmapi_contact)) {
+			$contact = crmapi_contact_load('', $user->crmapi_contact);
+			$contact_id = $user->crmapi_contact;
+		}
+		else {
+			$contact['email'] = $form_state['values']['email'];
+			$names = explode(' ', $form_state['values']['name']);
+			$contact['first_name'] = $names[0];
+			$contact['last_name'] = isset($names[2]) ? $names[2] : $names[1];
+			$contact['mail_name'] = $form_state['values']['name'];
+			$contact_id = crmapi_contact_save($contact);
+		}
+
+		$activity_params = array(
+      'contact_id' => $contact_id,
+      'activity_id' => 'OLForward',
+      'activity_type' => 'F',
+      'level' => '',
+      'flag' => '',
+      'description' => substr(url($returnurl, array('absolute' => TRUE)), 0, 100),
+		);
+		crmapi_activity_save($activity_params);
+	}
+}
+
+/**
+ * Implementation of hook_search()
+ *
+ * @param string $op
+ *  Operation - name, reset, search, status
+ * @param string $keys
+ *  Keyword string sent to the search
+ * @return
+ *  Array of search results (each is an assoc. array) that can be fed to a theme function
+ */
+function site_manager_custom_search($op = 'search', $keys = null) {
+	switch ($op) {
+		case 'name':
+			return variable_get('google_appliance_name', "Google Appliance");
+			break;
+
+		case 'search':
+          
+			global $pager_page_array, $pager_total, $pager_total_items;
+			$page = isset($_GET['page']) ? $_GET['page'] : '';
+			// Convert comma-separated $page to an array, used by other functions.
+			$pager_page_array = explode(',', $page);
+			// $element indicates which of the pagers active this pager is working from.  $limit indicates how many per page.
+			$element = 0;
+			//adjust pageminition
+			$limit = variable_get('search_limit_per_page',3);
+			$dir = drupal_get_path('module', 'google_appliance');
+			include_once $dir . '/DrupalGoogleMini.php';
+
+			$google_debug = variable_get('google_debug',0);
+			if ($google_debug >= 2 ){
+				$gm = new DrupalGoogleMini(true,'dpr');
+			} elseif ($google_debug == 1)  {
+				$gm = new DrupalGoogleMini(true);
+			} else {
+				$gm = new DrupalGoogleMini(false);
+			}
+
+			if ($cache = variable_get('google_appliance_cache_timeout',0) ) {
+				cache_clear_all(null,'cache_google');
+				$gm->cache = true;
+			}
+
+			// initialize search object
+			try {
+				$gm->setOutputEncoding('utf8');
+				$gm->setInputEncoding('utf8');
+				$gm->setMetaDataRequested('*');
+				$gm->addMetaDataFilter('*', '*');
+
+				// get configuration from settings page
+				$_tmp_host = variable_get('google_appliance_host_name', false);
+				if (!$_tmp_host) {
+					drupal_set_message('No host name has been configured for the search appliance. Please enter it on the <a href="@admin-url">Google Appliance settings page</a>', array("@admin-url" => url("admin/settings/search/google_appliance")), 'error');
+					return false;
+				}
+				$gm->baseUrl = $_tmp_host . "/search";
+				$gm->collection = variable_get('google_appliance_collection', '');
+				$gm->setQueryPart('client',variable_get('google_appliance_client', ''));
+
+				$gm->setQueryPart('filter',"0");
+				$gm->setQueryPart('show_spelling',"1");
+
+				$gm->setPageAndResultsPerPage($page, $limit);
+				// set search parameters $sorder should be A/D $mode is S
+				$keys = $_REQUEST['search_term'];
+				$keys_filtered = $_REQUEST['type'];
+				$sorder = $_REQUEST['sorder'];
+				$gm->setKeywords($keys);
+				$content_type_arry = array();
+				
+				if(isset($_REQUEST['type'])){
+					$content_type_arry = $_REQUEST['type'];
+					//$gm->addMetaDataFilter("keywords",$content_type_arry,"partialfields","OR");
+				} else{
+				$content_type_arry = array( '0' => 'Video',
+								            '1' => 'Interactive',
+								            '2' => 'Documents'
+				                            );
+				 $to_form_content_type_arry= "";                           
+                 //$gm->addMetaDataFilter("keywords",$content_type_arry,"partialfields","OR");          
+                }
+				if(isset($_REQUEST['stype'])){
+					$stypes= $_REQUEST['stype'];
+				    $stypes_arr= explode("|", $stypes);
+					//$gm->addMetaDataFilter("keywords",$stypes_arr,"partialfields","OR");
+				}
+				
+				$from_array = $_REQUEST['type'];
+				
+				if($sorder=='D'){
+					$gm->setDateSort("D","S");
+				} else {
+					$gm->setDateSort("A","S");
+				}
+				if (module_exists('i18n')) {
+					if ($lang = i18n_get_lang()) {
+						$gm->setLanguageFilter(array($lang));
+					}
+				}
+			}
+			catch (GoogleMiniCriteriaException $e) {
+				$code = $e->getCode();
+				if ($message = variable_get('google_appliance_errorcode_' . $code,'')) {
+					$user_message = $message;
+				} else {
+					$user_message = GoogleMiniException::getUserMessage($code);
+				}
+				$error_message = $e->getMessage();
+				if ($code > 0) {
+					$output .= "<h2>" . $user_message . "</h2>";
+					return $output;
+				} else {
+					watchdog('google_appliance', $error_message);
+					drupal_set_message($error_message, 'error');
+				}
+			}
+
+			// perform the search
+			$results = array();
+			try {
+				$resultIterator = $gm->query();
+				google_appliance_static_response_cache($resultIterator);
+				// Google never returns more than 1000 results, so we ignore any values larger than that.
+				$pager_total_items[$element] = ($resultIterator->totalResults < 1000) ? $resultIterator->totalResults : 1000;
+				$pager_total[$element] = ceil($pager_total_items[$element] / $limit);
+				$pager_page_array[$element] = max(0, min((int)$pager_page_array[$element], ((int)$pager_total[$element]) - 1));
+
+				foreach ($resultIterator as $key => $result) {
+					$results[] = google_custom_appliance_search_result_array($result);
+				}
+			}
+			catch(Exception $e) {
+				if ($e->getCode() > 0) {
+					google_appliance_static_response_cache($resultIterator);
+				}
+				$output = ''; //drupal_get_form('internetsearh_google_appliance_form', NULL);
+				drupal_set_message($e->getMessage());
+				return $output;
+			}
+			$result = '';
+			$results['total'] = $pager_total_items[$element];
+			$results['page'] = $pager_page_array[$element];
+		 	if(!isset($pager_total_items[$element])) {
+		 	 	$result.= t('Your search yielded no results');
+		 	 	
+		 	
+		 	 	
+		 	}
+			else
+			{   
+				
+			
+				$result .= '<div class="results_container">';
+				if($pager_total_items[$element]>=4){
+				
+				if(($keys_filtered=='') && ($_REQUEST['stype']=='')){
+				//$filter_key_types= 'Video|Interactive|Documents';  
+		 		echo $_REQUEST['stype'];
+		 		$filter_key_types="";                  
+		 	 	$result .= '<p><i>Sort by: <a href="googlesearch_custom?sorder=D&search_term='.$keys.'&stype='.$filter_key_types.'" title="">most recent</a> <a href="googlesearch_custom?sorder=A&search_term='.$keys.'&stype='.$filter_key_types.'" title="">least recent</a></i></p>';
+		 	 	} else{
+		 	 	if($keys_filtered){
+		 	 	
+		 	 	$filter_key_types = implode('|',$keys_filtered);
+		 	    $result .= '<p><i>Sort by: <a href="googlesearch_custom?sorder=D&search_term='.$keys.'&stype='.$filter_key_types.'" title="">most recent</a> <a href="googlesearch_custom?sorder=A&search_term='.$keys.'&stype='.$filter_key_types.'" title="">least recent</a></i></p>';
+			    } 
+		 	 	if($_REQUEST['stype']){
+		 	 	$filter_key_types=$_REQUEST['stype'];
+		 	    $result .= '<p><i>Sort by: <a href="googlesearch_custom?sorder=D&search_term='.$keys.'&stype='.$filter_key_types.'" title="">most recent</a> <a href="googlesearch_custom?sorder=A&search_term='.$keys.'&stype='.$filter_key_types.'" title="">least recent</a></i></p>';
+		 	 	}
+		 	 	}
+				
+				}
+			    if ($results) {
+					//for test in local
+					$countarr =count($results)-2;
+					for ($i=0;$i<$countarr;$i++) {
+						$result .= theme('resourcesbox', $results[$i]['title'], $results[$i]['link'], $results[$i]['snippet'], $results[$i]['type'], $results[$i]['date']);
+					}
+				}
+				$result .='<div id="page_navigation">';
+				$result .= theme('pager', $results['page'], 3, 0);
+				$result .='</div>';
+				$result .='</div>';
+			}
+			$output .= $result;
+			return $output;
+			break;
+
+		case 'reset':
+		case 'status':
+			// do nothing
+			break;
+	}
+}
+
+
+function google_custom_appliance_search_result_array($result) {  
+	$tempvar=$result->HAS->C;
+  return array(
+    'score' => $tempvar[SZ],
+    'link' => $result->U,
+    'user' => $result->getMetaData('user'),
+    'type' => $result->getMetaData('keywords'),
+    //'type' => $result->getMetaData('google-site-verification'),
+    'title' => strip_tags(decode_entities((string)$result->T)),
+    'date' => strtotime($result->getMetaData('date')),
+    'snippet' => decode_entities((string)$result->S),
+  );
+}
+
+/*
+ * implementations for the hoo menu alter
+ *
+ */
+function site_manager_menu_alter(&$items) {
+	$items['contactus/error']['title'] = 'Contact Us';
+	$items['contactus/success']['title'] = 'Contact Us';
+}

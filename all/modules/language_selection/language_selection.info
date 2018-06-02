@@ -1,0 +1,5 @@
+name = language_selection
+description = "Provide the facility to Select the Languages for Language Selection page for a Country"
+package = custom
+core = 6.x
+version = 6.x
